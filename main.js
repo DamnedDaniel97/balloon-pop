@@ -1,8 +1,6 @@
 // #region GAME LOGIC AND DATA
 
 // DATA
-let startButton = document.getElementById("start-button");
-let inflateButton = document.getElementById("inflate-button");
 let clickCount = 0;
 let height = 120;
 let width = 100;
@@ -10,14 +8,17 @@ let inflationRate = 20;
 let maxSize = 300;
 let highestPopCount = 0;
 let currentPopCount = 0;
-let gameLength = 5000;
+let gameLength = 10000;
 let clockId = 0;
 let currentPlayer = {};
+let currentColor = "blue";
+let possibleColors = ["blue", "yellow", "pink", "purple"];
 
 //starts game, this makes the buttons un-click-able after clicking,starts clock
 function startGame() {
-  startButton.setAttribute("disabled", "true");
-  inflateButton.removeAttribute("disabled");
+  document.getElementById("game-controls").classList.remove("hidden");
+  document.getElementById("main-controls").classList.add("hidden");
+  document.getElementById("scoreboard").classList.add("hidden");
   startClock();
   setTimeout(stopGame, gameLength);
 }
@@ -47,14 +48,27 @@ function inflate() {
   clickCount++;
   height += inflationRate;
   width += inflationRate;
+  checkBalloonPop();
+  draw();
+}
 
+function checkBalloonPop() {
   if (height >= maxSize) {
     console.log("pop the balloon");
+    let balloonElement = document.getElementById("balloon");
+    balloonElement.classList.remove(currentColor);
+    getRandomColor();
+    balloonElement.classList.add(currentColor);
+    document.getElementById("pop-sound").play();
     currentPopCount++;
     height = 0;
     width = 0;
   }
-  draw();
+}
+
+function getRandomColor() {
+  let i = Math.floor(Math.random() * possibleColors.length);
+  currentColor = possibleColors[i];
 }
 
 // draw is letting us put the changing variables onto the screen in visual terms
@@ -77,10 +91,11 @@ function draw() {
 // in this function we are displaying the game has ended, and resets our buttons/elements that changed in 'function-start game'
 // 'if-statement' lets us save our top pop count after multiple attempts
 function stopGame() {
-  console.log("its been five seconds");
+  // console.log("its been five seconds");
 
-  inflateButton.setAttribute("disabled", "true");
-  startButton.removeAttribute("disabled");
+  document.getElementById("game-controls").classList.add("hidden");
+  document.getElementById("main-controls").classList.remove("hidden");
+  document.getElementById("scoreboard").classList.remove("hidden");
 
   clickCount = 0;
   height = 120;
@@ -92,8 +107,8 @@ function stopGame() {
   }
   currentPopCount = 0;
   stopClock();
-
   draw();
+  drawScoreboard();
 }
 
 // #endregion
@@ -123,6 +138,7 @@ function setPlayer(event) {
   document.getElementById("game").classList.remove("hidden");
   form.classList.add("hidden");
   draw();
+  drawScoreboard();
 }
 
 // Lets us change player without resubmitting form
@@ -142,3 +158,22 @@ function loadPlayers() {
     players = playersData;
   }
 }
+
+function drawScoreboard() {
+  let template = "";
+
+  players.sort((p1, p2) => p2.topScore - p1.topScore);
+
+  players.forEach((player) => {
+    template += ` <div class="d-flex space-between">
+    <span>
+      <i class="fa fa-user"></i>
+      ${player.name}
+    </span>
+    <span>score: ${player.topScore}</span>
+  </div>`;
+  });
+  document.getElementById("players").innerHTML = template;
+}
+
+drawScoreboard();
